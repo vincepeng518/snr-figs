@@ -1,363 +1,273 @@
-# MSNR Playbook v3
-# Full-map bias + Fresh-only entries
-# Drop into AGENTS.md / Codex skill. Do not mix generic S/R folklore.
+# MSNR Playbook v4 — XAUUSD
+# Daily rail survives Unfresh. Gold intraday bias lives on M5.
+# Codex / AGENTS source. Not a holy grail.
 
-Status: operational spec, not a holy grail.
-80–90% win-rate claims are marketing. Skip unclear charts.
-
----
-
-## 0. Split that v2 got wrong
-
-v2 treated Unfresh as “ignore”. That is only true for **entries**.
-
-| Question | Uses Fresh | Uses Unfresh | Uses flips (RBS/SBR) |
-|---|---|---|---|
-| Where is price in the map? | Yes | Yes | Yes |
-| What is Daily / H4 / intraday bias? | Yes | Yes | Yes |
-| Where is the *destination*? | Yes (next same-TF Fresh) | No | Only if the flip is Fresh again |
-| Where may I enter? | Yes | No | Only if Fresh in the new role |
-
-Two layers. If they conflict, no trade.
-
-| Layer | Job | Always on? |
-|---|---|---|
-| A. Marking + bias | Full map, storyline, destination, invalidation | Yes |
-| B. Execution | Optional candle filter, ATR stop buffer, 1.5R | Optional house rules |
+Instrument: XAUUSD (gold). Do not copy this stack blindly onto FX majors.
+80–90% win-rate claims are marketing.
 
 ---
 
-## 1. Definitions (locked)
+## 0. What changed from v3
 
-### 1.1 Marking order: Daily → H4. H1 does not create levels.
+v3 killed Unfresh for entries on every TF. BTC Daily counterexample: an Unfresh Daily rail still launched the expansion after a tap. Freshness is a **quality score**, not an on/off switch at Daily.
 
-1. Chart type **Line** (close-to-close). Placement ignores wicks.
-2. **A-level** = peak on the line. Default role: resistance while price is below it.
-3. **V-level** = valley on the line. Default role: support while price is above it.
-4. Switch back to candles.
-5. **Gap / OCL** = gap between candle-1 **close** and candle-2 **open** when both candles are the **same color**.
-6. Draw **one price**. A stop buffer is Layer B, not a painted zone.
+Gold is liquid enough that a **5-minute storyline** is tradable. It is still nested under Daily and H4. M5 never votes down Daily.
 
-Do not promote a level because it bounced 2–3 times. Repeat bounces usually mean Unfresh.
+| Layer | Job |
+|---|---|
+| A. Map + nested bias | D1 + H4 + M5 full maps. Unfresh stays on HTF rails. |
+| B. Execution (optional) | Candle filter, ATR buffer, 1.5R. Default OFF. |
 
-### 1.2 State machine
+---
 
-| State | Meaning | Trigger on *this level’s TF* | Map role | Entry role |
+## 1. Gold stack (locked)
+
+Only three marking TFs. Do not paint H1/M15 unless the user pastes them.
+
+| TF | Role | Unfresh on map | Unfresh as bias rail | Unfresh as entry |
 |---|---|---|---|---|
-| Fresh | Untouched | Created; no wick of this TF has tagged it | Wall | Allowed if bias agrees |
-| Unfresh | Tested | Wick tagged the price; body did **not** close through | Road | Forbidden |
-| Broken | Role change | **Body close** through | Relabel, keep on map | — |
-| RBS | Resistance became support | Body close up through resistance | Support-type on map; may reset Fresh | Allowed only after reset to Fresh |
-| SBR | Support became resistance | Body close down through support | Resistance-type on map; may reset Fresh | Allowed only after reset to Fresh |
+| **Daily** | Destination + storyline | Yes | **Yes — still a magnet** | Allowed if H4 confirms the tap |
+| **H4** | Swing / session parent | Yes | Weak (road unless it sits on a Daily rail) | Skip unless it sits on a Daily rail |
+| **M5** | Gold intraday bias + execution | Yes (nearest 3) | Only Fresh M5 walls define M5 story | **Skip** |
 
-Rules:
-- Wick = test. Body close = break / flip.
-- After a flip the level **may become Fresh again** until the next wick of that TF tags it.
-- An H1 wick does **not** unfresh a Daily or H4 level.
-- The level that just produced the storyline reject is usually Unfresh afterwards. **Keep the bias. Do not re-enter that same print.**
+H1 / M15 = optional execution zoom. They do not create bias and they do not unfresh Daily/H4.
 
-### 1.3 Tag format
-
-```text
-TF | price | A or V or GAP | origin or RBS or SBR | Fresh or Unfresh | above or below | wall or road
-```
-
-`wall` = Fresh, expected to matter as defense / destination.  
-`road` = Unfresh, expected to be spent on the way to the next wall.
-
-Example:
-
-```text
-D1 | 2648.5 | A | origin | Fresh   | above | wall
-D1 | 2632.0 | A | origin | Unfresh | above | road
-H4 | 2621.0 | V | RBS    | Fresh   | below | wall
-```
-
-### 1.4 Inventory
-
-- Max **3 Daily + 3 H4** nearest to price, **including Unfresh**.
-- H1 / M15: execution only. No new levels. No HTF freshness judged from LTF wicks.
-- Relabel broken levels. Do not silently delete flip candidates.
-- Weekly: drop levels that are no longer on the current swing’s path.
+Price travels **same-TF Fresh wall → next same-TF Fresh wall**. Unfresh prints of that TF are pavement, except Daily Unfresh which remains a rail that can still reject.
 
 ---
 
-## 2. Bias engine (full map)
+## 2. Marking
 
-Bias answers: where did price come from, which way is the story, what is the magnet, what is only pavement.
+1. Line chart (close-to-close) for A / V. Candles for Gap/OCL.
+2. **A** = line peak (resistance while below). **V** = line valley (support while above). **Gap** = same-color close→next open hole.
+3. One price, not a box. ATR buffer is Layer B, not the level.
+4. Tag:
 
-### 2.1 Build the Daily map first
+```text
+TF | price | A or V or GAP | origin or RBS or SBR | Fresh or Unfresh | above or below | wall or road or rail
+```
 
-List every live Daily tag (Fresh + Unfresh + RBS/SBR). Then:
+- `wall` = Fresh. Defense + destination + primary entry.
+- `road` = Unfresh on H4 or M5. Look through it.
+- `rail` = Daily Unfresh (or Daily Fresh). Stays in the story even after wicks. May still reject.
 
-1. Nearest Daily **wall** above = destination if bias is up.  
-   Nearest Daily **wall** below = destination if bias is down.
-2. Unfresh Daily prints between price and that wall = **road**. Expect them to give way more often than they hold.
-3. Last **Daily body** event:
-   - Close away from a Daily level after a tag = reject (that level is now usually Unfresh; story can still start there).
-   - Close through a Daily level = break / flip.
-4. After a reject, did Daily **close** beyond the prior Daily swing? That confirms storyline follow-through.
-5. If the path to the next Daily wall is only Unfresh noise and **no** Fresh destination exists in range → Daily bias **Neutral**, confidence low.
+Inventory: max **3 Daily + 3 H4 + 3 M5** nearest to price.
+M5 older than the current London/NY swing: drop. Do not archive a week of M5.
 
-Daily bias =
+### State machine (same physics, different rights)
 
-- **Bullish** — last meaningful Daily event is support-type reject or bullish flip + follow-through, destination = next Daily Fresh A (or Fresh resistance-type) above.
-- **Bearish** — mirror, destination = next Daily Fresh V (or Fresh support-type) below.
-- **Neutral** — no reject + follow-through, or no Fresh Daily destination, or last Daily close killed the story.
-
-Daily invalidation = Daily **body close** through the level that defined the story, or Daily close that removes the Fresh destination without a new one.
-
-### 2.2 H4 vs Daily
-
-H4 is the road surface. Daily is the city.
-
-| H4 vs Daily | Label | How Unfresh is read |
-|---|---|---|
-| H4 structure agrees with Daily | Continuation | H4 Unfresh in front = pavement toward the Daily wall |
-| H4 pulling into a Daily/H4 wall that agrees with Daily | Roadblock / pullback | Wait at the **Fresh** pullback wall; Unfresh pullbacks are not entries |
-| H4 storyline opposite Daily | Conflict | Flat. Unfresh does not “vote” to override Daily |
-
-H4 invalidation = H4 body close through the H4 print that justified the H4 label.
-
-### 2.3 Intraday bias — pick exactly one
-
-| Daily | H4 | Intraday bias | Map reading | Entry |
+| State | Trigger on that TF | Daily rights | H4 rights | M5 rights |
 |---|---|---|---|---|
-| Bullish | Continuation | Long bias | Drive toward next Daily wall; Unfresh overhead is road | Long only at Fresh V / Fresh RBS |
-| Bullish | Roadblock pullback | Buy dips | Same destination; wait for the Fresh pullback wall | Long only at that wall |
-| Bullish | Conflict | Flat | Still map Daily destination; do not act | None |
-| Bearish | Continuation | Short bias | Drive toward next Daily wall below | Short only at Fresh A / Fresh SBR |
-| Bearish | Roadblock pullback | Sell rallies | Wait for Fresh pullback wall | Short only at that wall |
-| Bearish | Conflict | Flat | Map only | None |
-| Neutral | Anything | Flat | Map only | None |
+| Fresh | No wick of this TF yet | wall + entry | wall + entry | wall + M5-bias + entry |
+| Unfresh | Wick tagged; body did not close through | **rail + entry if H4 confirms** | road. Entry only if glued to a Daily rail | road. No entry. Does not set M5 bias |
+| Broken | Body close through | flip, keep | flip, keep | flip, keep |
+| RBS / SBR | Body close through, role reverse | may reset Fresh | may reset Fresh | may reset Fresh |
 
-Valid until the earlier of Daily invalidation close or H4 invalidation close.
-
-No “small size against trend”. Against-trend = Flat.
-
-### 2.4 How Unfresh is allowed to influence bias (and how it is not)
-
-Allowed:
-- Treat Unfresh as **lower odds of holding**, so bias may look *through* it to the next Fresh wall.
-- After a storyline reject, keep the bias even though that print is now Unfresh.
-- If several Unfresh levels stack in front of price and the next Fresh wall is far / unclear → **downgrade confidence**, maybe Neutral.
-
-Forbidden:
-- “Unfresh therefore reverse here.”
-- “Unfresh therefore I may enter at half size.”
-- Using an Unfresh M15/H1 line to set Daily bias.
-- Calling a Daily wick on an Unfresh level a fresh storyline start. Need a Daily close-away or Daily close-through.
+Wick ≠ break. Body close = break.
+An M5 wick does **not** unfresh H4 or Daily.
+The Daily print that just rejected is usually Unfresh/rail afterwards: **keep Daily bias, do not immediately re-tap that same Daily as a second entry without a new H4 confirm.**
 
 ---
 
-## 3. Entry flowchart (Fresh only)
+## 3. Nested bias (this is the gold engine)
+
+Compute bottom-up for the map, top-down for permission.
+
+### 3.1 Daily
+
+Full map: Fresh walls + Unfresh rails + flips.
+
+- Destination = next Daily **Fresh wall** in the story direction. If none visible → confidence down, not auto-flat if a Daily **rail** is still holding price.
+- Daily bias:
+  - **Bullish** — last Daily body event is support-type reject (Fresh or rail) or bullish flip, and price is holding above the acting Daily rail.
+  - **Bearish** — mirror.
+  - **Neutral** — no Daily rail in play, or last Daily body close killed it, or price is stuck mid-range with both Daily rails already spent and no destination wall.
+- Daily invalidation = Daily **body close** through the rail/wall that defined the story.
+
+Daily Unfresh is allowed to **start or continue** bias. That is the v3 → v4 patch.
+
+### 3.2 H4
+
+H4 is the parent of M5.
+
+| H4 vs Daily | Label |
+|---|---|
+| Agrees | Continuation |
+| Pulling into Daily wall/rail in Daily direction | Roadblock |
+| Opposite story | Conflict → **no gold directional book**. M5 may not invent one. |
+
+H4 Unfresh in front of price = road toward the Daily destination, unless that H4 print is sitting on a Daily rail (then treat the Daily rail as the reason).
+
+### 3.3 M5 — gold intraday bias
+
+M5 bias exists only as a **child** of H4.
+
+M5 storyline = last M5 Fresh reject or M5 body flip, aiming at the next M5 Fresh wall.
+
+| Daily | H4 | M5 | Intraday (gold) | Allowed |
+|---|---|---|---|---|
+| Bull | Cont | Bull | **Long** | Buy M5 Fresh V / Fresh RBS that agree |
+| Bull | Cont | Bear | **Buy dips** | Do not short the M5 story. Wait M5 Fresh V into H4/Daily rail |
+| Bull | Roadblock | Bull/Bear | **Buy dips** | Only at the H4/Daily rail. M5 is timing |
+| Bull | Conflict | any | **Flat** | No |
+| Bear | Cont | Bear | **Short** | Sell M5 Fresh A / Fresh SBR |
+| Bear | Cont | Bull | **Sell rallies** | Do not long M5. Wait M5 Fresh A into H4/Daily rail |
+| Bear | Roadblock | any | **Sell rallies** | Only at the parent rail |
+| Bear | Conflict | any | **Flat** | No |
+| Neutral | any | any | **Flat** | Map only |
+
+M5 Unfresh never sets M5 bias. If the only M5 prints in range are Unfresh → M5 bias **none**, fall back to H4 label (buy-dips / sell-rallies / flat).
+
+M5 bias dies at the earliest of:
+- M5 body close through the M5 wall that defined it
+- H4 invalidation
+- Daily invalidation
+- scheduled gold news (FOMC / CPI / NFP / live minutes) — M5 bias off until the H4 after the event closes
+
+---
+
+## 4. Entry
 
 ```text
-0. Build full map (Fresh + Unfresh + flips).
-   Compute Daily bias, H4 label, Intraday bias, destination wall.
-   If Intraday bias = Flat -> STOP.
+0. Map D1 (walls+rails), H4, M5.
+   Nested bias table -> one label.
+   Flat -> STOP.
 
-1. Price approaches a tagged Daily or H4 level
-   on the correct side of the bias
-   (longs at support-type, shorts at resistance-type).
+1. Location must be a permitted print:
+   - Daily Fresh wall, or
+   - Daily Unfresh rail with H4 close-away in the bias direction, or
+   - H4 Fresh wall, or
+   - H4 Unfresh ONLY if price is also on a Daily rail, or
+   - M5 Fresh wall that agrees with the nested label.
 
-2. State of THAT level on its own TF?
-   Unfresh -> STOP. It is road, not an entry.
-   Fresh   -> continue.
+2. Forbidden locations:
+   - M5 Unfresh
+   - H4 Unfresh in the middle of nowhere
+   - Any print against the nested label (no "small short" in a long book)
 
-3. Interaction on the level’s own TF
-   (Daily judged on Daily close; H4 on H4 close).
+3. Interaction on the print's own TF
+   (Daily judged on Daily close / H4 on H4 / M5 on M5).
 
-   A. Wick tags, body does not close through
-      -> valid test of a wall. Go to confirmation.
-      -> after this wick the level becomes Unfresh.
-         You may still take THIS first reaction.
-         You may not take the next tag of the same print.
+   A. First reaction: wick tags, body does not close through
+      -> take THIS reaction if step 1 allowed it.
+      -> mark Unfresh/rail after the wick for later orders.
 
-   B. Body closes through
-      -> leave reversal branch.
-      -> Break-Retest branch.
-      -> level flips (RBS/SBR) and may reset Fresh.
+   B. Body close through
+      -> no chase.
+      -> wait flip retest. Enter only if the flip is Fresh
+         (Daily Unfresh rail retest still allowed with H4 confirm).
 
-   C. Price never reaches the level
-      -> no trade.
+   C. Never reaches the print -> no trade.
 
-4. Confirmation
-   Required: close back away from the Fresh level in the bias direction.
-   Optional Layer B: engulfing / pin on H4 or H1 sitting ON the HTF level.
-   Filter ON and missing -> no trade.
-   Filter OFF -> HTF close-away is enough.
+4. Gold confirmation
+   Daily rail tap: require H4 close away (or M5 BOS in Daily direction
+   if the user is scalping the tap — still no trade if H4 is in Conflict).
+   M5 wall tap: M5 close away is enough when nested label already allows it.
 
-5. Entry
-   SL: beyond the level + Layer-B ATR buffer (buffer is not a zone on the chart).
-   TP1: next opposing Fresh wall on the setup TF.
-   TP2: Daily destination wall.
-   Path may pass through Unfresh prints; those are not extra TPs.
-   Min R to TP1 after buffer: 1.5. Else skip.
-
-Break-Retest:
-   Body close through -> WAIT. No chase on the break candle.
-   Pullback to the flipped print.
-   Enter only if it is Fresh in the new role AND rejects.
-   No retest within 2-3 candles of the TF that broke it
-   (Daily break -> 2-3 Daily; H4 break -> 2-3 H4) -> abandon.
+5. Stops / targets
+   SL: beyond the print + 0.25 ATR of the execution TF (M5 ATR if entering off M5).
+   TP1: next opposing Fresh wall on the execution TF.
+   TP2: parent rail/wall (H4 then Daily).
+   Unfresh M5/H4 between entry and TP = path, not extra TPs.
+   Daily Unfresh between entry and Daily destination = path that may still
+   react; do not flatten just because it was tagged.
+   Min 1.5R to TP1 after buffer, else skip.
 ```
 
-First-touch exception, written so Codex cannot stretch it:
-- The touch that **starts** the reaction may be taken while the level is still Fresh at the open of that interaction.
-- The moment the wick tags it, mark Unfresh for all **later** setups.
-- Do not queue a second order on that same print.
+---
+
+## 5. Worked gold sketches
+
+**A. Daily rail still works (the BTC lesson, applied to XAU)**  
+Daily V Unfresh, price mid-range chops on it, later taps and expands up.  
+Daily bias stays bullish while bodies hold above that rail.  
+Entry is not “because M5 looked nice in the chop”. Entry is the tap of the Daily rail + H4 close away. M5 only times it.
+
+**B. Gold London long**  
+Daily bull, H4 continuation, M5 prints a Fresh V during a shallow pullback.  
+Intraday = long. Buy M5 Fresh V. SL under M5 V + M5 ATR. TP1 next M5 Fresh A, TP2 H4/Daily wall.
+
+**C. Do not short gold M5 against Daily**  
+Daily bull, H4 continuation, M5 Unfresh A failing and M5 looks bearish.  
+Intraday = buy dips, not short. Wait M5 Fresh V. Shorting that M5 story is the error v4 exists to block.
+
+**D. M5 bias without a Daily destination wall**  
+No Daily Fresh above, but Daily Unfresh rail underneath is holding.  
+Daily still bullish (rail). Confidence mid. M5 longs allowed only into/holding that rail, not as a naked M5 scalp in the vacuum.
+
+**E. News**  
+CPI in 20 minutes. M5 bias off. Daily map stays. After the H4 that contains the release closes, rebuild M5.
 
 ---
 
-## 4. Layer B — house rules (optional)
-
-Default for Codex: **OFF** unless the user turns them on.
-
-- Candle filter ON/OFF.
-- SL buffer: FX 3–5 pips **or** `0.25 × ATR(14)` on the execution TF. XAU / indices: ATR only.
-- Size: full size only on Fresh + aligned Daily and H4. Zero size on Unfresh. Zero size against bias.
-- Skip red-news spikes and first minutes of London / NY as “normal touches”.
-- Journal: tags, wall/road, bias, destination, interaction, result.
-
----
-
-## 5. Codex I/O
+## 6. Codex I/O
 
 ### Input
 
 ```text
-Symbol:
-Timezone:
-Last price:
+MSNR v4 XAU
+Price:
 Session: Asia / London / NY
-Layer B filters: ON or OFF
+News in next 60m: yes/no
+Layer B: OFF
 
-DAILY tags (include Unfresh):
-H4 tags (include Unfresh):
-Last Daily reject or body-close break (or "unknown"):
-Screenshots: Daily + H4 if available
+Daily tags (Fresh AND Unfresh rails):
+H4 tags:
+M5 tags (current swing only):
+Last Daily body event (reject / close-through / unknown):
 ```
 
-### Output (mandatory sections)
+### Output
 
 ```text
 ### 1. Verdict
-- Price
-- Daily bias
-- Daily destination wall (Fresh only)
-- Daily roads in the way (Unfresh list)
-- H4 label: continuation / roadblock / conflict
-- Intraday bias: long / buy-dips / short / sell-rallies / flat
-- Confidence: high / mid / low — one reason
+- Daily bias + acting rail/wall + destination
+- H4 label
+- M5 bias (or none)
+- Intraday: long / buy-dips / short / sell-rallies / flat
+- Confidence: high / mid / low
 - Valid until
 
 ### 2. Daily map
-- Storyline (one sentence)
-- Walls
-- Roads
-- Invalidation close
+walls / rails / invalidation
 
 ### 3. H4 map
-- Relation to Daily
-- Walls
-- Roads
-- Invalidation close
+vs Daily / walls / roads
 
-### 4. Today
-- Actionable Fresh level(s)
-- Do-not-trade range (includes all Unfresh prints)
-- What would flip bias
+### 4. M5 map
+M5 Fresh walls only for bias
+Unfresh M5 listed as do-not-enter
 
 ### 5. Plan (omit if flat)
-- IF price reaches [Fresh level] AND [interaction]
-  THEN [direction]
-  SL [price]  TP1 [Fresh wall]  TP2 [Daily destination]
-- Unfresh prints between entry and TP are path, not targets
-- ELSE no trade
-
-### 6. Disclaimer
-Structure reading, not an order. Not financial advice.
+IF [print] AND [confirm TF close-away] THEN [direction]
+SL / TP1 / TP2
 ```
 
 Hard bans:
+- Do not let M5 unfresh Daily or H4.
+- Do not set gold intraday from M5 against H4 Conflict.
+- Do not skip Daily Unfresh on the map.
+- Do not enter M5 Unfresh.
 - Do not invent prices.
-- Do not paint zones as the level.
-- Do not drop Unfresh from the map.
-- Do not enter Unfresh.
-- Do not call a wick a Daily reject.
-- Do not let H1/M15 create HTF levels or HTF freshness.
-- Do not output against-trend “small size”.
-- Missing tags → ask. Do not guess A/V from wicks.
-
----
-
-## 6. Examples
-
-**A. Bias through Unfresh, enter at Fresh**
-- Daily bearish. Destination wall = Daily Fresh V at 2580.
-- Overhead Daily 2610 A is Unfresh = road.
-- H4 continuation. Intraday = short.
-- H4 Fresh A at 2602 is the entry wall.
-- Plan: short a first reaction at 2602. Expect 2610 may not hold if price spikes through it later. TP1 next H4 Fresh V, TP2 2580. Do not short 2610 itself.
-
-**B. Storyline reject consumes the print**
-- Daily V at 2620 was Fresh. Daily wicks it and closes away up. Story = bullish toward Daily Fresh A 2680.
-- 2620 is now Unfresh. Bias stays bullish. Do **not** buy 2620 again.
-- Next long is a Fresh H4 V / Fresh RBS on the pullback, or a new Fresh Daily support if one prints.
-
-**C. Daily RBS**
-- Daily body closes through resistance → RBS, state may reset Fresh.
-- H4 later tags that RBS while it is still Fresh → buy-dips if Daily is bullish.
-- If an H4 wick already spent that RBS before you arrived → Unfresh → map it as support-type road, do not buy it.
-
-**D. Conflict stays flat even with pretty Unfresh**
-- Daily bullish toward 2650 Fresh A.
-- H4 making lower highs, closing through its own V.
-- Intraday = flat. 2650 stays on the map as destination. No long in H4 weakness. No short just because H4 Unfresh supports are failing.
-
-**E. No destination wall**
-- Nearby Daily prints are all Unfresh. Next Fresh Daily is off the visible swing.
-- Daily bias Neutral, confidence low, intraday flat. Chart the roads. Do not force a destination.
+- News window: no M5 plan.
 
 ---
 
 ## 7. Mistakes
 
-- Building bias only from Fresh (blind map).
-- Entering Unfresh because “bias points through it”.
-- Re-entering the level that just created the storyline.
-- Treating A as “strong enough to fade Unfresh”.
-- Drawing a wick-box and calling it the MSNR level.
-- Using bounce count to decide a level is valid.
-- Chasing the break candle.
-- Letting M15 wicks unfresh Daily.
-- Taking Unfresh as TP just because price will pass them.
-- No journal of wall vs road, so the split cannot be audited.
+- Treating Daily Unfresh as dead (v3 error).
+- Treating M5 Unfresh as a Daily-style rail (opposite error).
+- Painting 20 M5 lines and calling it bias.
+- Shorting gold M5 because the micro story flipped while Daily rail is holding.
+- Using Asia M5 chop to override London H4.
+- Re-entering the same Daily rail twice in one Daily bar without a new H4 confirm.
 
 ---
 
-## 8. Session header
+## 8. One-liner
 
 ```text
-MSNR v3
-Symbol:
-Price:
-Filters (Layer B): OFF
-Daily tags (Fresh AND Unfresh):
-H4 tags (Fresh AND Unfresh):
-Map first. Bias from the full map. Entries Fresh only.
-If no Fresh destination, bias is Neutral / flat.
-```
-
----
-
-## 9. One-liner for the model
-
-```text
-Full map = Fresh walls + Unfresh roads + flips.
-Bias looks through roads toward the next same-TF Fresh wall.
-Entries only on Fresh walls that agree with Daily×H4 bias.
-The reject that starts a storyline usually leaves that print Unfresh;
-keep the story, do not buy/sell that same print again.
+Gold: Daily Unfresh is still a rail. H4 is the parent. M5 is the child bias.
+Entries: Daily rail (H4 confirm) or Fresh H4/M5 in nested direction.
+M5 Unfresh is noise. M5 never outvotes Daily.
 ```
