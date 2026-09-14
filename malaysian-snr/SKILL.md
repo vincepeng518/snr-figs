@@ -1,82 +1,74 @@
-# Skill: msnr-analyze
+# Skill: msnr-analyze (v4 XAU)
 
 當使用者要求看盤、給圖、給水平、或輸入 /msnr 時執行。
+默認黃金 XAUUSD。完整規則讀 `references/msnr-playbook.md`。
 
-## 分析順序（必須按此，不可跳）
+## 分析順序（不可跳）
 
-### A. 日線（D1）— 先定敘事
-1. 列出最近 6–12 根可見的 Daily A / V / Gap。
-2. 標每條：價位、類型、在現價上方或下方、Fresh 或 Unfresh、是否已翻轉（RBS/SBR）。
-3. 找 Daily storyline：
-   - 最近一次「fresh level reject」（收盤離開該水平，不只影線掃過）
-   - 之後是否出現結構破壞（破前高/前低，用收盤判斷）
-4. 給 Daily bias：偏多 / 偏空 / 中性
-   - 偏多例子：日線 reject Daily 支撐 或 突破後回測變 RBS，且目標是上方下一個 Daily fresh
-   - 偏空相反
-5. Daily 目標：下一個反向的 Daily fresh level
-6. Daily 失效：哪一根 Daily 收盤價打穿哪個水平，敘事作廢
+### A. 日線 — 故事 + 軌道
+1. 列出可見 Daily A / V / Gap（含 Unfresh）。每條標：價位、類型、origin/RBS/SBR、Fresh 或 Unfresh、現價上方/下方、wall / rail / road。
+2. Daily Unfresh = **rail**，不是作廢。可以起偏見、可以繼續偏見。
+3. Storyline：最近一次 Daily **body** 事件（收盤離開水平 = reject；實體穿越 = 翻轉）。不要求 reject 必須發生在 Fresh 上。
+4. Daily bias：偏多 / 偏空 / 中性。代價 rail/wall 仍拔住價格就可以給方向；沒有 Fresh 目標時降低確信，不自動變 Neutral。
+5. 目標：優先下一條 Daily Fresh wall。路上 Daily Unfresh 仍可能再 reject。
+6. 失效：Daily 實體收盤打穿定故事的那條 rail/wall。
 
-### B. 4小時（H4）— 日內偏見的主體
-1. 列出最近可見 H4 A / V / Gap，同樣標 Fresh/Unfresh。
-2. H4 相對 Daily 是：
-   - 順勢延續
-   - 去 Daily 目標途中的 pullback / roadblock
-   - 逆勢（衝突）
-3. H4 bias：偏多 / 偏空 / 回調中 / 衝突
-4. H4 路障：價格要到 Daily 目標前，中間還有哪些 H4 fresh level 可能擋住
-5. H4 失效條件
+### B. H4 — M5 的父母
+1. 列 H4 A/V/Gap。
+2. 相對 Daily：順勢（continuation） / 路障回調（roadblock） / 衝突（conflict）。
+3. 衝突 → 日內 = 觀望。M5 不得自創方向。
+4. H4 Unfresh = road；只有貼在 Daily rail 上才可當進場理由。
 
-### C. 合成「日內偏見」（這是使用者最要的欄位）
-用這張表，只能選一個主結論：
+### C. M5 — 黃金日內偏見（孩子）
+1. 只標當前擴張/盤中最近 3 條。不存一週的 M5。
+2. 只有 M5 **Fresh** 才能定 M5 偏見。M5 Unfresh 不進場、不投票。
+3. 嵌套表（只能選一個日內結論）：
 
-| Daily | H4 | 日內偏見 | 怎麼做 |
-|---|---|---|---|
-| 多 | 多 | 偏多 | 只找多單：H4/H1 的 V、RBS、fresh 支撐反應 |
-| 多 | 回調到 Daily/H4 支撐 | 逢低偏多 | 等到水平，不要追高 |
-| 多 | 空（衝突） | 中性／觀望 | 等 H4 重新順 Daily，或 Daily 敘事被打廢 |
-| 空 | 空 | 偏空 | 只找空單：H4/H1 的 A、SBR、fresh 阻力反應 |
-| 空 | 反彈到阻力 | 逢高偏空 | 等到水平，不要追空 |
-| 空 | 多（衝突） | 中性／觀望 | 同上 |
-| 中性 | 任何 | 無日內偏見 | 不做方向單，只記水平 |
+| Daily | H4 | M5 | 日內 | 允許 |
+|---|---|---|---|---|
+| 多 | 順 | 多 | 偏多 | 買 M5 Fresh V / Fresh RBS |
+| 多 | 順 | 空 | 逢低 | 不空 M5；等 M5 Fresh V 踏入 H4/Daily |
+| 多 | 路障 | 任意 | 逢低 | 只買 Daily/H4 軌道，M5 只計時 |
+| 多/空 | 衝突 | 任意 | 觀望 | 無 |
+| 空 | 順 | 空 | 偏空 | 賣 M5 Fresh A / Fresh SBR |
+| 空 | 順 | 多 | 逢高 | 不多 M5 |
+| 空 | 路障 | 任意 | 逢高 | 只賣父層軌道 |
+| 中性 | 任意 | 任意 | 觀望 | 只記地圖 |
 
-日內偏見必須附：
-- 有效期間（通常到當根 Daily 收盤，或 H4 失效被觸發）
-- 最優防守區（現價最近的順勢 fresh level）
-- 禁止區（逆勢追價、Unfresh 正中央、兩條水平中間的真空）
+4. M5 偏見死亡：M5 實體打穿、H4 失效、Daily 失效、或 60 分鐘內有 CPI/FOMC/NFP。
 
-### D. 建議（只能是條件式）
-格式固定：
-- 若價格到達 [水平] 且出現 [H4 或更低週期 reject / 破結構]，才考慮 [多/空]
-- 無效：收盤穿越 [價位]
-- 目標 1：最近反向 fresh level
-- 目標 2：下一個 Daily fresh
-- 若出現新聞、缺口跳空越過水平、或水平已被影線反覆測試：降級為不交易
+### D. 進場（條件式）
+允許位置：Daily Fresh wall；Daily Unfresh rail + H4 收盤離開；H4 Fresh；H4 Unfresh 僅當貼 Daily rail；順嵌套方向的 M5 Fresh。
+禁止：M5 Unfresh；沒 Daily 摺疊的 H4 Unfresh；逆嵌套方向。
 
-## 強制輸出模板
+格式：
+- 若價格到達 [水平] 且 [H4 或 M5 收盤離開] → 考慮 [多/空]
+- 無效：該 TF 實體收盤穿越 [價位]
+- TP1 同 TF 下一條反向 Fresh wall；TP2 父層 rail/wall
+- 同一條 Daily rail 同一根 Daily K 不重複進場
 
-### 1. 結論（先寫）
-- 品種 / 時區 / 現價
-- 日線偏見：
-- H4 偏見：
-- 日內偏見：偏多 / 偏空 / 逢低偏多 / 逢高偏空 / 觀望
-- 確信程度：高 / 中 / 低（理由一句）
+## 強制輸出
 
-### 2. 日線
-- Storyline：
-- Fresh 水平（上/下）：
-- Unfresh / 已翻轉：
-- 目標與失效：
+### 1. 結論
+- 品種 / 現價 / session / 60m 內新聞
+- 日線偏見 + 作用中 rail/wall + 目標
+- H4：順勢 / 路障 / 衝突
+- M5 偏見（或 none）
+- 日內：偏多 / 逢低 / 偏空 / 逢高 / 觀望
+- 確信：高 / 中 / 低
+- 有效至
 
-### 3. H4
-- 與日線關係：順勢 / 路障回調 / 衝突
-- Fresh 水平：
-- 路障：
-- 失效：
+### 2. Daily 地圖
+walls / rails / 失效
 
-### 4. 今日地圖
-- 想看到的反應區：
-- 不要交易的區間：
-- 若突破則改怎麼看：
+### 3. H4 地圖
+與 Daily 關係 / walls / roads
 
-### 5. 風險聲明
-這是結構閱讀，不是預測，也不是投資建議。
+### 4. M5 地圖
+Fresh walls；Unfresh = 不進場
+
+### 5. 計畫（觀望則省）
+IF … THEN … SL / TP1 / TP2
+
+### 6. 職責
+結構閱讀，不是預測，也不是投資建議。
